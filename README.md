@@ -90,6 +90,11 @@ rcnn:TRACKER:REID_MODEL
 
 ---
 
+### 4. Run all
+```
+python test_yolo.py --video output_realSense_mjpeg.avi --all-ultralytics --all-boxmot --csv all_results.csv
+````
+
 ## ⚙️ Command-Line Arguments
 
 | Argument | Description | Default |
@@ -133,13 +138,6 @@ The script outputs:
 
 ---
 
-## 📚 Additional Resources
-
-- **Available Models & Trackers**: See `AVAILABLE_TRACKERS_DETECTORS.md`
-- **Usage Guide**: See `BENCHMARK_USAGE.md`
-- **Final Testing Plan**: See `FINAL_TESTING_PLAN.md`
-
----
 
 **Last Updated**: 2024  
 **Version**: 1.0
