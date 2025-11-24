@@ -1,0 +1,23 @@
+# requirements_jetson.txt
+# PyTorch for Jetson must be installed separately from NVIDIA's repository
+# DO NOT install torch/torchvision from PyPI on Jetson
+
+# Core dependencies (install these with pip after PyTorch is installed)
+ultralytics>=8.0.0
+opencv-python>=4.5.0
+numpy>=1.21.0
+Pillow>=8.0.0
+boxmot>=10.0.0
+
+# PyTorch installation for Jetson:
+# Follow instructions at: https://github.com/dusty-nv/jetson-containers
+# Or use: https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048
+# 
+# Example installation (adjust JetPack version as needed):
+# sudo apt-get update
+# sudo apt-get install -y python3-pip libopenblas-base libopenmpi-dev libomp-dev
+# pip3 install --upgrade pip
+# pip3 install numpy
+# # Then install PyTorch wheel from NVIDIA (check latest version)
+# # Example: pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+

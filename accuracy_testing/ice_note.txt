@@ -1,0 +1,70 @@
+UPDATE!!:
+
+Description of All Directories/Files:
+
+/final -- the directory of the model file (yolo_track.py) and output file as .txt (mot file for evaluation)
+/final/yolo_track.py -- the file for running the yolo + tracker model using command 
+
+*** Command-line ***
+# yolo_track_img_reid.py
+
+pyhton yolo_track_img_reid.py --yolo-weights <yolov8n.pt.> --tracking-method <ocsort> --reid-model <osnet_x0_25_msmt17.pt> --source <path-to-folder-of-imgs> --output <path-to-results-inventory>
+ 
+# yolo_track_img.py
+
+python yolo_track_img.py --model <yolov8n.pt >--source <mot_eval/datasets/dataset1> --tracker <byetrack.yaml|botsort.yaml> --output tracking_results/img/d1_y8n_<bt|bs>.txt 
+
+
+# rcnn_track_img.py
+
+python boxmot_track_img.py --tracking-method bytetrack --reid-model <osnet_x0_25_msmt17.pt> --source <mot_eval/datasets/dataset1> --output <tracking_results/img/d1_y8n_bt_bm.txt>
+
+********************
+
+//EVALUATION//
+
+/final/mot_eval -- the directory for evaluation model
+/final/mot_eval/evaluate.py -- the file for evaluation
+/final/mot_eval/run_eval -- the script for running the evaluation file by using command:
+
+*** Command-line ***
+  
+  python evaluate.py ../tracking_results/<re-id_name>/ --dataset dataset1 --output eval_results/<re-id_name>/name.txt
+  
+********************
+
+** You need to run it under the mot_eval or same directory with the /datasets
+
+/final/mot_eval/datasets -- the directory contains datasets
+/final/mot_eval/datasets/dataset1 -- In this level, this directory contain the set of png 
+/final/mot_eval/datasets/dataset1/ground_truth -- the directory contains mot.txt file that is the test case for the dataset1 after running the model
+
+
+Object Detector:
+Ulterlytics: Yolo
+Boxmot: Faster R CNN
+
+Tracker:
+Boxmot:
+> OcSort (ocs) – motion-only, very fast, simple to integrate.
+> ByteTrack (bt) – excellent accuracy/speed tradeoff, very popular.
+> BotSort (bs) – ByteTrack + appearance + camera motion compensation.
+> DeepOcSort (docs) – OC-SORT + appearance features (ReID).
+> StrongSort (ss) – upgraded DeepSORT with better ReID (OSNet) and smoother motion model.
+> BoostTrack (bst) – very strong accuracy but heavier.
+> HybridSort (hbs)
+
+ReId Model (Boxmot):
+✅lmbn_n_cuhk03_d.pt               # lightweight
+✅osnet_x0_25_market1501.pt
+❌ mobilenetv2_x1_4_msmt17.engine
+❌ resnet50_msmt17.onnx
+✅osnet_x1_0_msmt17.pt
+✅clip_market1501.pt               # heavy
+❌clip_vehicleid.pt
+
+ocsort / bytetrack → ❌ ReID model NOT required.
+deepocsort / strongsort / botsort / boosttrack / hybridsort → ✅ ReID model REQUIRED.
+
+
+
