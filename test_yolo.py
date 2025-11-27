@@ -111,6 +111,8 @@ def create_tracker(tracker_type, reid_model=None, device='cpu'):
     if not BOXMOT_AVAILABLE:
         raise ValueError("BoxMOT not available. Install with: pip install boxmot")
     
+    # Pass reid_weights to all trackers - BoxMOT handles it internally
+    # Some trackers (ocsort, bytetrack) don't use ReID but accept the parameter
     reid_weights = Path(reid_model) if reid_model else None
     device = torch.device(device)
     
@@ -133,6 +135,7 @@ def create_tracker(tracker_type, reid_model=None, device='cpu'):
 def benchmark_yolo_ultralytics(video_path, model_path, tracker_yaml, conf=0.5, classes=None, 
                                 max_frames=None, show_viz=False):
     """Benchmark YOLO with Ultralytics built-in tracker"""
+    print(f"  Loading model: {model_path}...")
     model = YOLO(model_path)
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -145,18 +148,24 @@ def benchmark_yolo_ultralytics(video_path, model_path, tracker_yaml, conf=0.5, c
     )
     
     # Warmup
-    for _ in range(10):
+    warmup_frames = 5
+    print(f"  Warmup ({warmup_frames} frames)...", end=" ", flush=True)
+    for i in range(warmup_frames):
         ret, frame = cap.read()
         if ret:
             model.track(frame, persist=True, tracker=tracker_yaml, conf=conf, 
                        classes=classes, verbose=False)
+            print(f"{i+1}", end=" ", flush=True)
         else:
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    print("done")
     
     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
     frame_count = 0
+    total_frames = max_frames if max_frames else int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     t_start = time.time()
     
+    print(f"  Processing {total_frames} frames:", end=" ", flush=True)
     while True:
         ret, frame = cap.read()
         if not ret or (max_frames and frame_count >= max_frames):
@@ -172,6 +181,10 @@ def benchmark_yolo_ultralytics(video_path, model_path, tracker_yaml, conf=0.5, c
         result.add_result(infer_ms, num_tracks)
         frame_count += 1
         
+        # Progress indicator every 10 frames
+        if frame_count % 10 == 0 or frame_count == total_frames:
+            print(f"{frame_count}", end=" ", flush=True)
+        
         if show_viz:
             annotated = results[0].plot()
             cv2.putText(annotated, f"{result.name}", (10, 30),
@@ -182,6 +195,7 @@ def benchmark_yolo_ultralytics(video_path, model_path, tracker_yaml, conf=0.5, c
             if cv2.waitKey(1) & 0xFF == 27:
                 break
     
+    print("done")
     result.total_elapsed = time.time() - t_start
     cap.release()
     return result
@@ -190,7 +204,9 @@ def benchmark_yolo_ultralytics(video_path, model_path, tracker_yaml, conf=0.5, c
 def benchmark_yolo_boxmot(video_path, model_path, tracker_type, reid_model, conf=0.5, 
                           classes=None, max_frames=None, show_viz=False, device='cpu'):
     """Benchmark YOLO detector with BoxMOT tracker"""
+    print(f"  Loading YOLO model: {model_path}...")
     detector = YOLODetector(model_path, conf=conf, classes=classes)
+    print("  Creating tracker...")
     tracker = create_tracker(tracker_type, reid_model, device=device)
     
     cap = cv2.VideoCapture(video_path)
@@ -204,20 +220,26 @@ def benchmark_yolo_boxmot(video_path, model_path, tracker_type, reid_model, conf
     )
     
     # Warmup
-    for _ in range(10):
+    warmup_frames = 5
+    print(f"  Warmup ({warmup_frames} frames)...", end=" ", flush=True)
+    for i in range(warmup_frames):
         ret, frame = cap.read()
         if ret:
             boxes, confs, labels = detector.detect(frame)
             if len(boxes) > 0:
                 detections = np.concatenate([boxes, confs[:, None], labels[:, None]], axis=1)
                 tracker.update(detections, frame)
+            print(f"{i+1}", end=" ", flush=True)
         else:
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    print("done")
     
     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
     frame_count = 0
+    total_frames = max_frames if max_frames else int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     t_start = time.time()
     
+    print(f"  Processing {total_frames} frames:", end=" ", flush=True)
     while True:
         ret, frame = cap.read()
         if not ret or (max_frames and frame_count >= max_frames):
@@ -239,6 +261,10 @@ def benchmark_yolo_boxmot(video_path, model_path, tracker_type, reid_model, conf
         result.add_result(infer_ms, num_tracks)
         frame_count += 1
         
+        # Progress indicator every 10 frames
+        if frame_count % 10 == 0 or frame_count == total_frames:
+            print(f"{frame_count}", end=" ", flush=True)
+        
         if show_viz:
             if len(tracks) > 0:
                 tracker.plot_results(frame, show_trajectories=True)
@@ -250,6 +276,7 @@ def benchmark_yolo_boxmot(video_path, model_path, tracker_type, reid_model, conf
             if cv2.waitKey(1) & 0xFF == 27:
                 break
     
+    print("done")
     result.total_elapsed = time.time() - t_start
     cap.release()
     return result
@@ -258,7 +285,9 @@ def benchmark_yolo_boxmot(video_path, model_path, tracker_type, reid_model, conf
 def benchmark_rcnn_boxmot(video_path, tracker_type, reid_model, conf=0.5, 
                          classes=None, max_frames=None, show_viz=False, device='cpu'):
     """Benchmark Faster R-CNN detector with BoxMOT tracker"""
+    print("  Loading R-CNN detector...")
     detector = RCNNDetector(conf=conf, classes=classes, device=device)
+    print("  Creating tracker...")
     tracker = create_tracker(tracker_type, reid_model, device=device)
     
     cap = cv2.VideoCapture(video_path)
@@ -271,21 +300,27 @@ def benchmark_rcnn_boxmot(video_path, tracker_type, reid_model, conf=0.5,
         tracker_type
     )
     
-    # Warmup
-    for _ in range(10):
+    # Warmup (reduced to 3 frames for CPU)
+    warmup_frames = 3
+    print(f"  Warmup ({warmup_frames} frames)...", end=" ", flush=True)
+    for i in range(warmup_frames):
         ret, frame = cap.read()
         if ret:
             boxes, confs, labels = detector.detect(frame)
             if len(boxes) > 0:
                 detections = np.concatenate([boxes, confs[:, None], labels[:, None]], axis=1)
                 tracker.update(detections, frame)
+            print(f"{i+1}", end=" ", flush=True)
         else:
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    print("done")
     
     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
     frame_count = 0
+    total_frames = max_frames if max_frames else int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     t_start = time.time()
     
+    print(f"  Processing {total_frames} frames:", end=" ", flush=True)
     while True:
         ret, frame = cap.read()
         if not ret or (max_frames and frame_count >= max_frames):
@@ -307,6 +342,10 @@ def benchmark_rcnn_boxmot(video_path, tracker_type, reid_model, conf=0.5,
         result.add_result(infer_ms, num_tracks)
         frame_count += 1
         
+        # Progress indicator every 10 frames
+        if frame_count % 10 == 0 or frame_count == total_frames:
+            print(f"{frame_count}", end=" ", flush=True)
+        
         if show_viz:
             if len(tracks) > 0:
                 tracker.plot_results(frame, show_trajectories=True)
@@ -318,6 +357,7 @@ def benchmark_rcnn_boxmot(video_path, tracker_type, reid_model, conf=0.5,
             if cv2.waitKey(1) & 0xFF == 27:
                 break
     
+    print("done")
     result.total_elapsed = time.time() - t_start
     cap.release()
     return result

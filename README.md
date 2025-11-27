@@ -92,7 +92,11 @@ rcnn:TRACKER:REID_MODEL
 
 ### 4. Run all
 ```
-python test_yolo.py --video output_realSense_mjpeg.avi --all-ultralytics --all-boxmot --csv all_results.csv
+python test_yolo.py --video output_realSense_mjpeg.avi --all-ultralytics --csv yolo_results.csv
+python test_yolo.py --video output_realSense_mjpeg.avi --all-boxmot --csv r_cnn_results.csv --max-frames 30
+
+python download_ssdv2.py
+python test_ssd.py --video output_realSense_mjpeg.avi --all-boxmot --csv ssd_results.csv
 ````
 
 ## ⚙️ Command-Line Arguments
