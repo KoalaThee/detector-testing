@@ -19,6 +19,7 @@ try:
     BOXMOT_AVAILABLE = True
 except ImportError:
     BOXMOT_AVAILABLE = False
+    print("BoxMOT import error: ", repr(e))
     print("Warning: boxmot not available. BoxMOT trackers will be disabled.")
 
 
