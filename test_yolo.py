@@ -18,9 +18,9 @@ try:
     from boxmot import BoostTrack, OcSort, StrongSort, HybridSort, DeepOcSort, ByteTrack, BotSort
     BOXMOT_AVAILABLE = True
 except ImportError:
-    BOXMOT_AVAILABLE = False
-    print("BoxMOT import error: ", repr(e))
     print("Warning: boxmot not available. BoxMOT trackers will be disabled.")
+    print("BoxMOT import error: ", repr(e))
+    BOXMOT_AVAILABLE = False
 
 
 class BenchmarkResult:
