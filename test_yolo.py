@@ -17,7 +17,7 @@ from torchvision.models.detection import (
 try:
     from boxmot import BoostTrack, OcSort, StrongSort, HybridSort, DeepOcSort, ByteTrack, BotSort
     BOXMOT_AVAILABLE = True
-except ImportError:
+except Exception as e:
     print("Warning: boxmot not available. BoxMOT trackers will be disabled.")
     print("BoxMOT import error: ", repr(e))
     BOXMOT_AVAILABLE = False
